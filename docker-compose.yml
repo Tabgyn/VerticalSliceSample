@@ -1,13 +1,17 @@
 services:
   verticalslicesample.api:
     image: ${DOCKER_REGISTRY-}verticalslicesampleapi
+    container_name: verticalslicesample.api
     build:
       context: .
       dockerfile: src/VerticalSliceSample.Api/Dockerfile
+    ports:
+      - "5000:5000" 
+      - "5001:5001"
 
-  postgres:
-    image: postgres:16-alpine
-    container_name: sample_postgres
+  verticalslicesample.database:
+    image: postgres:18-alpine
+    container_name: verticalslicesample.database
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -15,28 +19,24 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - default_network
+      - postgres_data:/var/lib/postgresql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  pgadmin:
+  verticalslicesample.pgadmin:
     image: dpage/pgadmin4:latest
-    container_name: sample_pgadmin
+    container_name: verticalslicesample.pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@email.com
       PGADMIN_DEFAULT_PASSWORD: admin123
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     ports:
-      - "5050:80"
+      - "5450:80"
     depends_on:
-      - postgres
-    networks:
-      - default_network
+      - verticalslicesample.database
     volumes:
       - pgadmin_data:/var/lib/pgadmin
 
@@ -45,7 +45,3 @@ volumes:
     driver: local
   pgadmin_data:
     driver: local
-
-networks:
-  default_network:
-    driver: bridge
