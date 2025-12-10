@@ -5,6 +5,10 @@
   <Folder Name="/src/">
     <Project Path="src/VerticalSliceSample.Api/VerticalSliceSample.Api.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/VerticalSliceSample.IntegrationTests/VerticalSliceSample.IntegrationTests.csproj" Id="4971a684-b9ed-4089-8b73-63edd86cbd18" />
+    <Project Path="tests/VerticalSliceSample.UnitTests/VerticalSliceSample.UnitTests.csproj" Id="c04f4189-f211-4762-8c73-8f500198a4f1" />
+  </Folder>
   <Project Path="docker-compose.dcproj">
     <Build />
   </Project>

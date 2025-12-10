@@ -11,29 +11,10 @@ public interface IJwtService
     string GenerateAccessToken(User user);
 }
 
-public class JwtService : IJwtService
+public class JwtService(IConfiguration configuration) : IJwtService
 {
-    private readonly IConfiguration _configuration;
-    private readonly JwtSecurityTokenHandler _tokenHandler;
-    private readonly TokenValidationParameters _validationParameters;
-
-    public JwtService(IConfiguration configuration)
-    {
-        _configuration = configuration;
-        _tokenHandler = new JwtSecurityTokenHandler();
-
-        _validationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = _configuration["Jwt:Issuer"],
-            ValidAudience = _configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!)),
-        };
-    }
+    private readonly IConfiguration _configuration = configuration;
+    private readonly JwtSecurityTokenHandler _tokenHandler = new();
 
     /// <summary>
     /// Generates a JWT Access Token for the user
@@ -48,7 +29,7 @@ public class JwtService : IJwtService
         var token = new JwtSecurityToken(
             issuer: _configuration["Jwt:Issuer"],
             audience: _configuration["Jwt:Audience"],
-            claims: [new(ClaimTypes.NameIdentifier, user.Id.ToString())],
+            claims: [new(ClaimTypes.NameIdentifier, user.ReferenceId.ToString())],
             expires: DateTime.UtcNow.AddMinutes(expirationMinutes),
             signingCredentials: credentials
         );

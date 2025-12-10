@@ -15,7 +15,6 @@ public class Signup : IEndpoint
     public static void Map(IEndpointRouteBuilder app) => app
         .MapPost("/signup", Handle)
         .WithName("Signup")
-        .WithTags("Autenticacao")
         .WithSummary("Creates a new user account")
         .WithRequestValidation<Request>();
 

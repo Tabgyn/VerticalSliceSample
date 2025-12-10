@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Serilog;
+using VerticalSliceSample.Api;
+using VerticalSliceSample.Api.Authentication.Services;
 using VerticalSliceSample.Api.Database;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,7 +54,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+            ClockSkew = TimeSpan.Zero
         };
 
         options.SaveToken = true;
@@ -87,6 +90,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddTransient<IJwtService, JwtService>();
+builder.Services.AddTransient<IPasswordHasherService, PasswordHasherService>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen(c =>
@@ -112,8 +118,17 @@ builder.Services.AddSwaggerGen(c =>
         [new OpenApiSecuritySchemeReference("bearer", document)] = []
     });
 
+    c.CustomSchemaIds(type => type.FullName?.Replace('+', '.'));
+    c.InferSecuritySchemes();
+
     c.TagActionsBy(api => [api.GroupName ?? api.ActionDescriptor.RouteValues["controller"] ?? "Default"]);
 });
+
+builder.Services.AddCors(options =>
+    options.AddPolicy("AllowAll", policy =>
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader()));
 
 builder.Services.AddHealthChecks()
     .AddNpgSql(builder.Configuration.GetConnectionString("DefaultConnection")!);
@@ -133,10 +148,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseSerilogRequestLogging();
-
 app.UseHttpsRedirection();
-
+app.UseCors("AllowAll");
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapHealthChecks("/health");
+
+app.MapEndpoints();
 
 if (app.Environment.IsDevelopment())
 {

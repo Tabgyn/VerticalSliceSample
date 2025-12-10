@@ -13,7 +13,6 @@ public class Login : IEndpoint
     public static void Map(IEndpointRouteBuilder app) => app
         .MapPost("/login", Handle)
         .WithName("Login")
-        .WithTags("Authentication")
         .WithSummary("Logs in a user")
         .WithRequestValidation<Request>();
 
